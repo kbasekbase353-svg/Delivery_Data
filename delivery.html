@@ -1,0 +1,1207 @@
+<!DOCTYPE html>
+<!-- saved from url=(0129)file:///C:/Users/hfarouk/Desktop/Final%20Zone%20and%20inquires/Bon%20Appetite%20Delivery%20Data%20Manager.html%20final%20one.html -->
+<html lang="en">
+
+<head>
+  <meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Delivery Data Manager</title>
+  <link rel="icon" type="image/png" href="images.png">
+  <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&display=swap" rel="stylesheet">
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+  <!-- Firebase SDKs -->
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-database-compat.js"></script>
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+      font-family: 'Cairo', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    }
+
+    body {
+      background: #f4f6fa;
+      color: #1f2937;
+      min-height: 100vh;
+    }
+
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 10px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: #818cf8;
+      /* Light pastel blue/indigo */
+      border-radius: 10px;
+      border: 3px solid #f1f5f9;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: #4f46e5;
+    }
+
+    .container {
+      max-width: 1320px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 12px;
+      box-shadow: 0 4px 20px rgba(0, 0, 0, 0.06);
+      overflow: hidden;
+      padding-bottom: 0;
+    }
+
+    header {
+      background: linear-gradient(135deg, #1e3a8a 0%, #2563eb 100%);
+      color: #fff;
+      padding: 20px 28px;
+    }
+
+    header h1 {
+      font-size: 36px;
+      font-weight: 800;
+      letter-spacing: 0.5px;
+      text-transform: capitalize;
+      text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      margin-bottom: 4px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    header p {
+      font-size: 13px;
+      opacity: 0.85;
+    }
+
+    .toolbar {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      padding: 16px 24px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      align-items: center;
+    }
+
+    .search-wrapper {
+      position: relative;
+      flex: 1;
+      min-width: 200px;
+    }
+
+    .toolbar input[type="text"] {
+      width: 100%;
+      padding: 14px 45px 14px 20px;
+      /* Space for X on the right if RTL, or left if LTR */
+      border: 2px solid #e0e7ff;
+      background-color: #fcfdff;
+      border-radius: 12px;
+      font-size: 18px;
+      font-weight: 600;
+      color: #312e81;
+      outline: none;
+      transition: all 0.2s;
+      direction: rtl;
+      text-align: right;
+    }
+
+    .clear-search {
+      position: absolute;
+      left: 15px;
+      /* Position on the left for LTR-aligned placeholder/input? */
+      /* Wait, user wants text alignment RTL but placeholder left. */
+      /* Let's put X on a side that doesn't overlap text. */
+      top: 50%;
+      transform: translateY(-50%);
+      background: #e0e7ff;
+      color: #312e81;
+      border: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: none;
+      /* Hidden by default */
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: bold;
+      transition: all 0.2s;
+      z-index: 5;
+    }
+
+    .clear-search:hover {
+      background: #c7d2fe;
+      color: #1e1b4b;
+    }
+
+    .toolbar input[type="text"]::placeholder {
+      color: #a5b4fc;
+      opacity: 0.8;
+      text-align: left;
+    }
+
+    .toolbar input[type="text"]:focus {
+      border-color: #818cf8;
+      background-color: #fff;
+      box-shadow: 0 0 0 4px rgba(129, 140, 248, 0.1);
+    }
+
+    button {
+      padding: 9px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    button:hover {
+      transform: translateY(-1px);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    .btn-primary {
+      background: #2563eb;
+      color: #fff;
+    }
+
+    .btn-primary:hover {
+      background: #1d4ed8;
+    }
+
+    .btn-success {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .btn-success:hover {
+      background: #059669;
+    }
+
+    .btn-warning {
+      background: #f59e0b;
+      color: #fff;
+    }
+
+    .btn-warning:hover {
+      background: #d97706;
+    }
+
+    .btn-danger {
+      background: #ef4444;
+      color: #fff;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-secondary {
+      background: #6b7280;
+      color: #fff;
+    }
+
+    .btn-secondary:hover {
+      background: #4b5563;
+    }
+
+    .table-wrap {
+      overflow-x: auto;
+      max-height: 65vh;
+      overflow-y: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    thead th {
+      position: sticky;
+      top: 0;
+      background: #f8fafc;
+      color: #475569;
+      padding: 14px 14px;
+      text-align: center;
+      font-weight: 700;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-bottom: 2px solid #e2e8f0;
+      white-space: nowrap;
+      z-index: 10;
+    }
+
+    thead th.ar {
+      direction: rtl;
+      text-align: center;
+      font-family: inherit;
+    }
+
+    tbody tr:hover {
+      background-color: #dbeafe !important;
+      box-shadow: inset 8px 0 0 #1e40af;
+    }
+
+    tbody tr:hover td input {
+      background-color: #dbeafe !important;
+    }
+
+    tbody td {
+      padding: 12px 14px;
+      border-bottom: 1px solid #f1f5f9;
+      vertical-align: middle;
+    }
+
+    tbody td input {
+      width: 100%;
+      border: 1px solid transparent;
+      background: transparent;
+      padding: 8px 12px;
+      border-radius: 6px;
+      font-size: 14px;
+      font-family: inherit;
+      outline: none;
+      text-align: center;
+      /* Center text for better balance */
+    }
+
+    tbody td input[readonly] {
+      background: #fdfdfd;
+      color: #71717a;
+    }
+
+    tbody td input:not([readonly]):focus {
+      border-color: #2563eb;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.08);
+    }
+
+    tbody td.ar input {
+      direction: rtl;
+    }
+
+    tbody td input[type="number"] {
+      font-weight: 500;
+      color: #2563eb;
+    }
+
+    .row-actions {
+      display: flex;
+      gap: 6px;
+    }
+
+    .row-actions button {
+      padding: 5px 10px;
+      font-size: 12px;
+    }
+
+    .col-checkbox {
+      width: 36px;
+      text-align: center;
+    }
+
+    .col-id {
+      width: 60px;
+      text-align: right;
+    }
+
+    .col-cost {
+      width: 100px;
+    }
+
+    .col-branch {
+      min-width: 160px;
+    }
+
+    .col-zone {
+      min-width: 140px;
+    }
+
+    .col-street {
+      min-width: 450px;
+    }
+
+    .col-city {
+      width: 100px;
+    }
+
+    .col-actions {
+      width: 110px;
+    }
+
+    .admin-only {
+      display: none;
+    }
+
+    body.admin-active .admin-only {
+      display: table-cell;
+    }
+
+    .empty {
+      text-align: center;
+      padding: 50px 20px;
+      color: #6b7280;
+      font-size: 14px;
+    }
+
+    .empty svg {
+      margin-bottom: 10px;
+      opacity: 0.4;
+    }
+
+    .footer {
+      padding: 14px 24px;
+      background: #f9fafb;
+      border-top: 1px solid #e5e7eb;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 13px;
+      color: #6b7280;
+    }
+
+    .badge {
+      display: inline-block;
+      padding: 2px 9px;
+      background: #dbeafe;
+      color: #1e40af;
+      border-radius: 12px;
+      font-weight: 600;
+      font-size: 12px;
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 100;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: #fff;
+      border-radius: 12px;
+      padding: 24px;
+      max-width: 420px;
+      width: 90%;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+    }
+
+    .modal h3 {
+      margin-bottom: 12px;
+      font-size: 18px;
+    }
+
+    .modal p {
+      color: #4b5563;
+      margin-bottom: 18px;
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: 10px;
+      justify-content: flex-end;
+    }
+
+    /* Password modal */
+    .pw-input-wrap {
+      position: relative;
+      margin: 6px 0 10px;
+    }
+
+    .pw-input {
+      width: 100%;
+      padding: 11px 44px 11px 14px;
+      border: 1.5px solid #d1d5db;
+      border-radius: 8px;
+      font-size: 16px;
+      letter-spacing: 4px;
+      text-align: center;
+      outline: none;
+      transition: border-color 0.15s, box-shadow 0.15s;
+      font-family: inherit;
+    }
+
+    .pw-input:focus {
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+    }
+
+    .pw-input.error {
+      border-color: #ef4444;
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15);
+      animation: shake 0.4s;
+    }
+
+    @keyframes shake {
+
+      0%,
+      100% {
+        transform: translateX(0);
+      }
+
+      20% {
+        transform: translateX(-8px);
+      }
+
+      40% {
+        transform: translateX(8px);
+      }
+
+      60% {
+        transform: translateX(-5px);
+      }
+
+      80% {
+        transform: translateX(5px);
+      }
+    }
+
+    .pw-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: transparent;
+      border: none;
+      color: #6b7280;
+      cursor: pointer;
+      padding: 6px 8px;
+      font-size: 13px;
+      border-radius: 4px;
+    }
+
+    .pw-toggle:hover {
+      color: #1f2937;
+      background: #f3f4f6;
+    }
+
+    .pw-error {
+      color: #ef4444;
+      font-size: 13px;
+      margin-top: 6px;
+      display: none;
+    }
+
+    .pw-error.show {
+      display: block;
+    }
+
+    .pw-hint {
+      color: #9ca3af;
+      font-size: 12px;
+      margin-top: 4px;
+      text-align: center;
+    }
+
+    .lock-icon {
+      text-align: center;
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    #toast {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      background: #1f2937;
+      color: #fff;
+      padding: 12px 20px;
+      border-radius: 8px;
+      font-size: 14px;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.25s;
+      z-index: 200;
+      pointer-events: none;
+    }
+
+    #toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    #toast.success {
+      background: #10b981;
+    }
+
+    #toast.error {
+      background: #ef4444;
+    }
+
+    input[type="file"] {
+      display: none;
+    }
+
+    .file-label {
+      display: inline-block;
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+    <style>
+      .header-title {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .header-logo {
+        width: 32px;
+        height: 32px;
+        object-fit: contain;
+      }
+    </style>
+    <header>
+      <div class="header-title" style="cursor: default;">
+        <img src="images.png" alt="Logo" style="height: 60px; margin-right: 20px; border-radius: 10px; cursor: pointer;"
+          onclick="window.location='index.html'">
+        <h1>Delivery Data Manager</h1>
+      </div>
+    </header>
+
+    <div class="toolbar" style="flex-direction: row-reverse;">
+      <div class="search-wrapper">
+        <input type="text" id="searchBox" placeholder=" ...Search by city, zone, branch, street">
+        <button id="clearSearchBtn" class="clear-search" title="Clear Search">✕</button>
+      </div>
+
+      <button class="btn-primary" id="adminPortalBtn">⚙ Admin</button>
+
+      <div id="adminControls" style="display: none; gap: 10px; flex-wrap: wrap;">
+        <button class="btn-primary" id="addRowBtn">➕ Add Row</button>
+        <button class="btn-warning" id="unlockBtn">🔓 Unlock Editing</button>
+        <button class="btn-success" id="importBtnUI">📥 Import Data</button>
+        <input type="file" id="importFile" accept=".csv,.json,.xlsx,.xls" style="display: none;">
+        <button class="btn-warning" id="exportBtn">📤 Export Data</button>
+        <button class="btn-danger" id="deleteSelectedBtn" title="Password protected">🗑 Delete Selected 🔒</button>
+        <button class="btn-danger" id="clearAllBtn" title="Password protected">⚠ Clear All 🔒</button>
+        <button class="btn-secondary" id="changePwBtn">🔑 Change PW</button>
+        <button class="btn-secondary" id="exitAdminBtn">✖ Exit Admin</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th class="col-checkbox admin-only"><input type="checkbox" id="selectAll"></th>
+            <th class="ar col-cost">تكلفة الدليفري</th>
+            <th class="ar col-branch">الفرع</th>
+            <th class="col-zone">Zone</th>
+            <th class="col-street">Street / Area</th>
+            <th class="col-city">CITY</th>
+            <th class="col-id">#</th>
+            <th class="col-actions admin-only">Actions</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody">
+          <!-- Rows will be dynamically loaded here -->
+        </tbody>
+      </table>
+      <div class="empty" id="emptyState">
+        <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5">
+          <path d="M3 7h18M3 12h18M3 17h18"></path>
+        </svg>
+        <div>No data yet. Click "Add Row" or "Import Data" to get started.</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div>Total rows: <span class="badge" id="rowCount">0</span></div>
+      <div>Selected: <span class="badge" id="selectedCount">0</span></div>
+    </div>
+  </div>
+
+  <!-- Confirm modal -->
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal">
+      <h3 id="modalTitle">Confirm Action</h3>
+      <p id="modalMessage">Are you sure you want to proceed?</p>
+      <div class="modal-actions">
+        <button class="btn-secondary" id="modalCancel">Cancel</button>
+        <button class="btn-danger" id="modalConfirm">Confirm</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Password modal -->
+  <div class="modal-overlay" id="passwordModal">
+    <div class="modal">
+      <div class="lock-icon">🔒</div>
+      <h3 id="pwTitle">Authentication Required</h3>
+      <p id="pwMessage">Please enter the password to continue.</p>
+      <div class="pw-input-wrap">
+        <input type="password" id="pwInput" class="pw-input" placeholder="•••" autocomplete="off" maxlength="32">
+        <button type="button" class="pw-toggle" id="pwToggle" title="Show / hide password">👁</button>
+      </div>
+      <div class="pw-error" id="pwError">Incorrect password. Please try again.</div>
+      <div class="pw-hint">A password is required for this action.</div>
+      <div class="modal-actions" style="margin-top: 14px;">
+        <button class="btn-secondary" id="pwCancel">Cancel</button>
+        <button class="btn-danger" id="pwConfirm">Unlock &amp; Continue</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    // ---------- Firebase Configuration ----------
+    const firebaseConfig = {
+      apiKey: "AIzaSyApPGuiCSiwyeYFmNklPL0a5DZchQxF67E",
+      authDomain: "delivery-86995.firebaseapp.com",
+      databaseURL: "https://delivery-86995-default-rtdb.europe-west1.firebasedatabase.app",
+      projectId: "delivery-86995",
+      storageBucket: "delivery-86995.firebasestorage.app",
+      messagingSenderId: "651254983812",
+      appId: "1:651254983812:web:965b5772d71917348ee6d1",
+      measurementId: "G-G9NWXJYSGN"
+    };
+
+    firebase.initializeApp(firebaseConfig);
+    const db = firebase.database();
+
+    // ---------- State ----------
+    const STORAGE_KEY = 'deliveryDataManager_rows';
+    const PW_STORAGE_KEY = 'deliveryDataManager_pw';
+    let rows = [];
+    let nextId = 1;
+    let pendingConfirm = null;
+    let isUnlocked = false;
+    let currentPassword = '258';
+
+    // ---------- Storage ----------
+    function save() {
+      // Save locally as backup
+      localStorage.setItem(STORAGE_KEY, JSON.stringify(rows));
+      // Save to Firebase
+      db.ref('delivery_data').set(rows).catch(e => console.error("Firebase Save Error:", e));
+    }
+
+    function savePassword(newPw) {
+      currentPassword = newPw;
+      localStorage.setItem(PW_STORAGE_KEY, newPw);
+      db.ref('app_config/password').set(newPw).catch(e => console.error("Firebase PW Save Error:", e));
+    }
+
+    function load() {
+      // 1. Initial Load from LocalStorage (Fast UI response)
+      const localRows = localStorage.getItem(STORAGE_KEY);
+      if (localRows) {
+        rows = JSON.parse(localRows);
+        nextId = rows.length ? rows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1 : 1;
+        render();
+      }
+
+      const localPw = localStorage.getItem(PW_STORAGE_KEY);
+      if (localPw) currentPassword = localPw;
+
+      // 2. Sync from Firebase
+      db.ref('delivery_data').once('value').then(snapshot => {
+        const val = snapshot.val();
+        if (val) {
+          rows = val;
+          nextId = rows.length ? rows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1 : 1;
+          save(); // Sync local with remote
+          render();
+        }
+      });
+
+      db.ref('app_config/password').once('value').then(snapshot => {
+        const val = snapshot.val();
+        if (val) {
+          currentPassword = val;
+          localStorage.setItem(PW_STORAGE_KEY, val);
+        }
+      });
+    }
+
+    function scrapeInitialRows() {
+      const tbody = document.getElementById('tableBody');
+      const trs = tbody.querySelectorAll('tr[data-id]');
+      const initialRows = [];
+      trs.forEach(tr => {
+        const id = parseInt(tr.dataset.id);
+        const cost = tr.querySelector('[data-field="cost"]')?.value || "";
+        const branch = tr.querySelector('[data-field="branch"]')?.value || "";
+        const zone = tr.querySelector('[data-field="zone"]')?.value || "";
+        const street = tr.querySelector('[data-field="street"]')?.value || "";
+        const city = tr.querySelector('[data-field="city"]')?.value || "";
+
+        initialRows.push({
+          id: id,
+          cost: cost === "" ? "" : (isNaN(cost) ? cost : parseFloat(cost)),
+          branch: branch,
+          zone: zone,
+          street: street,
+          city: city
+        });
+      });
+
+      if (initialRows.length > 0) {
+        rows = initialRows;
+        nextId = rows.reduce((max, r) => Math.max(max, r.id || 0), 0) + 1;
+        save();
+        toast(`Scraped ${rows.length} existing rows`, 'success');
+      }
+    }
+
+    // ---------- Toast ----------
+    function toast(msg, type = '') {
+      const t = document.getElementById('toast');
+      t.textContent = msg;
+      t.className = 'show ' + type;
+      clearTimeout(t._timer);
+      t._timer = setTimeout(() => t.className = '', 2500);
+    }
+
+    // ---------- Confirm modal ----------
+    function confirmAction(title, message, onYes) {
+      document.getElementById('modalTitle').textContent = title;
+      document.getElementById('modalMessage').textContent = message;
+      document.getElementById('confirmModal').classList.add('active');
+      pendingConfirm = onYes;
+    }
+    document.getElementById('modalCancel').onclick = () => {
+      document.getElementById('confirmModal').classList.remove('active');
+      pendingConfirm = null;
+    };
+    document.getElementById('modalConfirm').onclick = () => {
+      document.getElementById('confirmModal').classList.remove('active');
+      if (pendingConfirm) pendingConfirm();
+      pendingConfirm = null;
+    };
+
+    // ---------- Password modal ----------
+    // let currentPassword = localStorage.getItem(PW_STORAGE_KEY) || '258'; // Moved up config
+    let pendingPwAction = null;
+
+    function requirePassword(title, message, onCorrect) {
+      const overlay = document.getElementById('passwordModal');
+      const input = document.getElementById('pwInput');
+      const err = document.getElementById('pwError');
+
+      document.getElementById('pwTitle').textContent = title;
+      document.getElementById('pwMessage').textContent = message;
+
+      input.value = '';
+      input.type = 'password';
+      input.classList.remove('error');
+      err.classList.remove('show');
+      document.getElementById('pwToggle').textContent = '👁';
+
+      pendingPwAction = onCorrect;
+      overlay.classList.add('active');
+      setTimeout(() => input.focus(), 50);
+    }
+
+    function closePasswordModal() {
+      document.getElementById('passwordModal').classList.remove('active');
+      pendingPwAction = null;
+    }
+
+    function tryUnlock() {
+      const input = document.getElementById('pwInput');
+      const err = document.getElementById('pwError');
+      if (input.value === currentPassword) {
+        const cb = pendingPwAction;
+        closePasswordModal();
+        if (cb) cb();
+      } else {
+        input.classList.add('error');
+        err.classList.add('show');
+        input.value = '';
+        setTimeout(() => {
+          input.classList.remove('error');
+          input.focus();
+        }, 450);
+      }
+    }
+
+    document.getElementById('changePwBtn').onclick = () => {
+      requirePassword('Authenticate', 'Enter current password to set a new one.', () => {
+        const newPw = prompt('Enter new password:');
+        if (newPw && newPw.trim()) {
+          savePassword(newPw.trim());
+          toast('Password changed successfully', 'success');
+        } else {
+          toast('Password change cancelled', 'error');
+        }
+      });
+    };
+
+    document.getElementById('pwCancel').onclick = closePasswordModal;
+    document.getElementById('pwConfirm').onclick = tryUnlock;
+    document.getElementById('pwInput').addEventListener('keydown', e => {
+      if (e.key === 'Enter') { e.preventDefault(); tryUnlock(); }
+      if (e.key === 'Escape') closePasswordModal();
+    });
+    document.getElementById('passwordModal').addEventListener('click', e => {
+      if (e.target.id === 'passwordModal') closePasswordModal();
+    });
+    document.getElementById('pwToggle').onclick = () => {
+      const input = document.getElementById('pwInput');
+      const t = document.getElementById('pwToggle');
+      if (input.type === 'password') {
+        input.type = 'text';
+        t.textContent = '🙈';
+      } else {
+        input.type = 'password';
+        t.textContent = '👁';
+      }
+    };
+
+    // ---------- Render ----------
+    function render() {
+      const tbody = document.getElementById('tableBody');
+      const empty = document.getElementById('emptyState');
+      const filter = document.getElementById('searchBox').value.toLowerCase().trim();
+
+      const filtered = rows.filter(r => {
+        if (!filter || filter.length < 3) return true;
+        return ['cost', 'branch', 'zone', 'street', 'city']
+          .some(k => String(r[k] || '').toLowerCase().includes(filter));
+      });
+
+      if (filtered.length === 0 && rows.length === 0) {
+        tbody.innerHTML = '';
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+        tbody.innerHTML = filtered.map(r => `
+          <tr data-id="${r.id}">
+            <td class="col-checkbox admin-only"><input type="checkbox" class="row-check" /></td>
+            <td class="ar"><input type="number" min="0" step="0.01" data-field="cost" value="${r.cost ?? ''}" placeholder="0.00" ${isUnlocked ? '' : 'readonly'}/></td>
+            <td class="ar"><input type="text" data-field="branch" value="${escapeHtml(r.branch ?? '')}" placeholder="الفرع" ${isUnlocked ? '' : 'readonly'}/></td>
+            <td><input type="text" data-field="zone" value="${escapeHtml(r.zone ?? '')}" placeholder="Zone" ${isUnlocked ? '' : 'readonly'}/></td>
+            <td><input type="text" data-field="street" value="${escapeHtml(r.street ?? '')}" placeholder="Street / Area" ${isUnlocked ? '' : 'readonly'}/></td>
+            <td><input type="text" data-field="city" value="${escapeHtml(r.city ?? '')}" placeholder="CITY" ${isUnlocked ? '' : 'readonly'}/></td>
+            <td class="col-id">${r.id}</td>
+            <td class="col-actions admin-only">
+              <div class="row-actions">
+                <button class="btn-danger" data-action="delete">Delete</button>
+              </div>
+            </td>
+          </tr>
+        `).join('');
+
+        const unlockBtn = document.getElementById('unlockBtn');
+        if (isUnlocked) {
+          unlockBtn.innerHTML = '🔒 Lock Editing';
+          unlockBtn.classList.replace('btn-warning', 'btn-secondary');
+        } else {
+          unlockBtn.innerHTML = '🔓 Unlock Editing';
+          unlockBtn.classList.replace('btn-secondary', 'btn-warning');
+        }
+
+        // Cell editing
+        tbody.querySelectorAll('input[data-field]').forEach(inp => {
+          inp.addEventListener('input', e => {
+            const id = +e.target.closest('tr').dataset.id;
+            const f = e.target.dataset.field;
+            const row = rows.find(r => r.id === id);
+            if (row) {
+              row[f] = f === 'cost' ? (e.target.value === '' ? '' : parseFloat(e.target.value)) : e.target.value;
+              save();
+            }
+          });
+        });
+
+        // Row delete
+        tbody.querySelectorAll('button[data-action="delete"]').forEach(btn => {
+          btn.addEventListener('click', e => {
+            const id = +e.target.closest('tr').dataset.id;
+            requirePassword('Delete Row', 'Enter password to delete this row.', () => {
+              rows = rows.filter(r => r.id !== id);
+              save();
+              render();
+              toast('Row deleted', 'success');
+            });
+          });
+        });
+
+        // Row checkboxes
+        tbody.querySelectorAll('.row-check').forEach(cb => {
+          cb.addEventListener('change', updateCounts);
+        });
+      }
+      updateCounts();
+    }
+
+    function updateCounts() {
+      document.getElementById('rowCount').textContent = rows.length;
+      const selected = document.querySelectorAll('.row-check:checked').length;
+      document.getElementById('selectedCount').textContent = selected;
+    }
+
+    function escapeHtml(s) {
+      return String(s || '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // ---------- Actions ----------
+    document.getElementById('adminPortalBtn').onclick = () => {
+      requirePassword('Admin Access', 'Enter password to access administration tools.', () => {
+        document.getElementById('adminControls').style.display = 'flex';
+        document.getElementById('adminPortalBtn').style.display = 'none';
+        document.body.classList.add('admin-active');
+        toast('Admin mode enabled', 'success');
+      });
+    };
+
+    document.getElementById('exitAdminBtn').onclick = () => {
+      document.getElementById('adminControls').style.display = 'none';
+      document.getElementById('adminPortalBtn').style.display = 'block';
+      document.body.classList.remove('admin-active');
+      isUnlocked = false; // Relock editing on exit
+      render();
+      toast('Exited admin mode', 'success');
+    };
+
+    document.getElementById('addRowBtn').onclick = () => {
+      requirePassword('Add Row', 'Enter password to add a new row.', () => {
+        rows.push({ id: nextId++, cost: '', branch: '', zone: '', street: '', city: '' });
+        save();
+        render();
+        toast('New row added', 'success');
+      });
+    };
+
+    document.getElementById('importBtnUI').onclick = () => {
+      requirePassword('Import Data', 'Enter password to import data.', () => {
+        document.getElementById('importFile').click();
+      });
+    };
+
+    document.getElementById('unlockBtn').onclick = () => {
+      if (isUnlocked) {
+        isUnlocked = false;
+        render();
+        toast('Editing locked', 'success');
+      } else {
+        requirePassword('Unlock Editing', 'Enter password to enable cell editing.', () => {
+          isUnlocked = true;
+          render();
+          toast('Editing unlocked', 'success');
+        });
+      }
+    };
+
+    document.getElementById('searchBox').addEventListener('input', e => {
+      const btn = document.getElementById('clearSearchBtn');
+      btn.style.display = e.target.value ? 'flex' : 'none';
+      render();
+    });
+
+    document.getElementById('clearSearchBtn').onclick = () => {
+      const sb = document.getElementById('searchBox');
+      sb.value = '';
+      document.getElementById('clearSearchBtn').style.display = 'none';
+      render();
+      sb.focus();
+    };
+
+    document.getElementById('selectAll').onclick = e => {
+      document.querySelectorAll('.row-check').forEach(cb => cb.checked = e.target.checked);
+      updateCounts();
+    };
+
+    document.getElementById('deleteSelectedBtn').onclick = () => {
+      const checked = [...document.querySelectorAll('.row-check:checked')];
+      if (!checked.length) return toast('No rows selected', 'error');
+      requirePassword('Delete Selected', `Delete ${checked.length} row(s)?`, () => {
+        const ids = new Set(checked.map(c => +c.closest('tr').dataset.id));
+        rows = rows.filter(r => !ids.has(r.id));
+        save();
+        render();
+        toast(`${checked.length} row(s) deleted`, 'success');
+      });
+    };
+
+    document.getElementById('clearAllBtn').onclick = () => {
+      if (!rows.length) return toast('Already empty', 'error');
+      requirePassword('Clear All', 'This will delete ALL data.', () => {
+        rows = []; nextId = 1;
+        save(); render();
+        toast('All data cleared', 'success');
+      });
+    };
+
+    // ---------- Export ----------
+    document.getElementById('exportBtn').onclick = () => {
+      requirePassword('Export Data', 'Enter password to export data.', () => {
+        exportToXLSX();
+      });
+    };
+
+
+    function exportToXLSX() {
+      if (!rows.length) return toast('Nothing to export', 'error');
+      const data = rows.map((r, i) => ({
+        '#': i + 1,
+        'تكلفة الدليفري': r.cost,
+        'الفرع': r.branch,
+        'Zone': r.zone,
+        'Street / Area': r.street,
+        'CITY': r.city
+      }));
+      const ws = XLSX.utils.json_to_sheet(data);
+      const wb = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(wb, ws, "Delivery Data");
+      XLSX.writeFile(wb, `delivery-data-${todayStamp()}.xlsx`);
+      toast('Exported as XLSX', 'success');
+    }
+
+    function downloadBlob(blob, filename) {
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url; a.download = filename;
+      document.body.appendChild(a); a.click(); a.remove();
+      setTimeout(() => URL.revokeObjectURL(url), 1000);
+    }
+
+    function todayStamp() {
+      const d = new Date();
+      return d.toISOString().replace(/T/, '-').replace(/[:.]/g, '').slice(0, 15);
+    }
+
+    // ---------- Import ----------
+    document.getElementById('importFile').onchange = e => {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      const ext = file.name.split('.').pop().toLowerCase();
+
+      reader.onload = ev => {
+        try {
+          let newRows = [];
+          if (ext === 'json') {
+            newRows = JSON.parse(ev.target.result).map(r => normalizeImported(r));
+          } else if (ext === 'xlsx' || ext === 'xls') {
+            const workbook = XLSX.read(ev.target.result, { type: 'binary' });
+            const firstSheet = workbook.SheetNames[0];
+            const data = XLSX.utils.sheet_to_json(workbook.Sheets[firstSheet]);
+            newRows = data.map(r => normalizeImported(r));
+          } else {
+            newRows = parseCSV(ev.target.result);
+          }
+          importRows(newRows);
+        } catch (err) {
+          toast('Import failed: ' + err.message, 'error');
+        }
+        e.target.value = '';
+      };
+
+      if (ext === 'xlsx' || ext === 'xls') reader.readAsBinaryString(file);
+      else reader.readAsText(file);
+    };
+
+    function normalizeImported(r) {
+      const get = (keys) => {
+        const rowKeys = Object.keys(r);
+        for (let k of keys) {
+          // 1. Direct match
+          if (r[k] !== undefined && r[k] !== null) return r[k];
+          // 2. Case-insensitive and trimmed match
+          const found = rowKeys.find(rk => rk.trim().toLowerCase() === k.trim().toLowerCase());
+          if (found && r[found] !== undefined) return r[found];
+        }
+        return '';
+      };
+
+      return {
+        id: r.id || null,
+        cost: get(['cost', 'تكلفة الدليفري', 'تكلفة', 'السعر', 'التكلفة']),
+        branch: get(['branch', 'الفرع', 'فرع', 'الفرع ', 'branch name']),
+        zone: get(['zone', 'Zone', 'المنطقة', 'منطقة']),
+        street: get(['street', 'Street / Area', 'الشارع', 'شارع', 'العنوان', 'عنوان']),
+        city: get(['city', 'City', 'المدينة', 'مدينة', 'المحافظة', 'محافظة'])
+      };
+    }
+
+    function parseCSV(text) {
+      const lines = text.replace(/^\uFEFF/, '').split(/\r?\n/).filter(l => l.trim());
+      if (lines.length < 2) return [];
+      const headers = splitCSVLine(lines[0]).map(h => h.trim().toLowerCase());
+      return lines.slice(1).map(line => {
+        const cells = splitCSVLine(line);
+        const obj = {};
+        headers.forEach((h, i) => obj[h] = cells[i] ?? '');
+        return normalizeImported(obj);
+      });
+    }
+
+    function splitCSVLine(line) {
+      const out = []; let cur = '', inQ = false;
+      for (let i = 0; i < line.length; i++) {
+        const c = line[i];
+        if (inQ) {
+          if (c === '"' && line[i + 1] === '"') { cur += '"'; i++; }
+          else if (c === '"') inQ = false;
+          else cur += c;
+        } else {
+          if (c === ',') { out.push(cur); cur = ''; }
+          else if (c === '"') inQ = true;
+          else cur += c;
+        }
+      }
+      out.push(cur); return out;
+    }
+
+    function importRows(newRows) {
+      if (!newRows.length) return toast('No data found', 'error');
+      confirmAction('Import Data', `Import ${newRows.length} rows?`, () => {
+        newRows.forEach(r => {
+          r.id = nextId++;
+          rows.push(r);
+        });
+        save(); render();
+        toast(`Imported ${newRows.length} rows`, 'success');
+      });
+    }
+
+    // ---------- Init ----------
+    load();
+    render();
+
+    // Close modals on Escape
+    document.addEventListener('keydown', e => {
+      if (e.key === 'Escape') {
+        document.getElementById('confirmModal').classList.remove('active');
+        closePasswordModal();
+      }
+    });
+
+  </script>
+</body>
+
+</html>
